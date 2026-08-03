@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+REPO_DIR=$(dirname "$SCRIPT_DIR")
+PYTHONPATH="$REPO_DIR/src${PYTHONPATH:+:$PYTHONPATH}" \
+  exec python3 -m deepstar_v14_3d.cli "$@"
+

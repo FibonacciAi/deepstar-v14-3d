@@ -1,0 +1,11 @@
+.DS_Store
+.venv/
+.venv-sharp/
+vendor/
+cache/
+workspace/
+dist/
+build/
+*.pyc
+__pycache__/
+

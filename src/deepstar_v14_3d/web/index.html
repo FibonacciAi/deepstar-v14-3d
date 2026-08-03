@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Deepstar v14 3D</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="mark">✦</span><div><b>Deepstar</b><small>v14 · 3D lab</small></div></div>
+    <div id="runtime" class="pill">Checking isolation…</div>
+  </header>
+  <main>
+    <section class="composer panel">
+      <div class="eyebrow">2D → spatial scene</div>
+      <h1>Give one image<br>room to move.</h1>
+      <p class="lede">Import a frame or generate one, then lift it into a local 3D scene without touching Deepstar v14 or its training stack.</p>
+
+      <div class="source-tabs" role="tablist">
+        <button class="tab active" data-source="image">Import image</button>
+        <button class="tab" data-source="prompt">Generate image</button>
+      </div>
+      <div id="imageSource" class="source-pane">
+        <label class="drop" id="dropZone">
+          <input id="imageInput" type="file" accept="image/*">
+          <img id="imagePreview" alt="Selected source preview">
+          <span id="dropCopy"><b>Choose or drop an image</b><small>PNG, JPEG, HEIC, WebP, TIFF</small></span>
+        </label>
+      </div>
+      <div id="promptSource" class="source-pane hidden">
+        <label for="prompt">Scene prompt</label>
+        <textarea id="prompt" rows="5" placeholder="A glass observatory above a bioluminescent forest, cinematic blue hour"></textarea>
+        <small id="promptHint">Requires DEEPSTAR3D_IMAGE_COMMAND in the launch environment.</small>
+      </div>
+
+      <div class="controls">
+        <label>3D engine<select id="backend"><option value="depth-card">Instant depth preview</option><option value="apple-sharp">Apple SHARP · research only</option></select></label>
+        <label>Compute<select id="device"><option value="default">Automatic</option><option value="mps">Apple silicon MPS</option><option value="cpu">CPU</option></select></label>
+      </div>
+      <label class="consent"><input id="rights" type="checkbox"><span>I have permission to use this image and any depicted likenesses.</span></label>
+      <button id="create" class="primary">Create 3D scene <span>↗</span></button>
+      <div id="message" class="message" aria-live="polite"></div>
+    </section>
+
+    <section class="viewer panel">
+      <div class="viewer-top"><div><span class="live-dot"></span><span id="viewerLabel">Ready for a source</span></div><div class="viewer-actions"><a id="download" class="hidden">Download .ply</a><a id="receipt" class="hidden">Receipt</a></div></div>
+      <canvas id="scene"></canvas>
+      <div id="empty" class="empty"><div class="orb"><i></i><i></i><i></i></div><p>Your spatial preview appears here.</p><small>Drag to orbit · scroll to zoom</small></div>
+      <div class="viewer-foot"><span>Local-only workspace</span><span id="pointCount">Geometry preview</span></div>
+    </section>
+  </main>
+  <footer><span>Separate repo · unique cache · port 47143</span><span>Apple weights are never bundled</span></footer>
+  <script src="/app.js"></script>
+</body>
+</html>
+
