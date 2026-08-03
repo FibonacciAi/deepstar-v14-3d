@@ -16,9 +16,11 @@ confirmation is required for both routes.
 
 ## Stage 2: representation
 
-- `depth-card`: samples the image into a colored point surface with a bounded
-  depth heuristic. It is deterministic, fast, model-free, and intended for UI
-  and export plumbing validation.
+- `depth-card` (Apple Vision spatial portrait): uses the operating system's
+  person segmentation and face detection, removes the background, builds a
+  face-aware front surface, and adds a back shell plus silhouette rim. It needs
+  no downloaded weights and remains deterministic geometry rather than a
+  learned monocular-depth claim.
 - `apple-sharp`: calls the official SHARP predictor and returns its metric 3D
   Gaussian `.ply`. The adapter uses a dedicated Torch/cache root and defaults
   to MPS on Apple silicon. The Apple checkpoint is research-only.
@@ -44,4 +46,3 @@ with dedicated 3DGS tooling.
 
 No v14 weights, datasets, private media, caches, bundle identifiers, or app
 state are reused.
-

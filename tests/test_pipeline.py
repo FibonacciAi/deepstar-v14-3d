@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import json
-import os
 import struct
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from deepstar_v14_3d.backends import AppleSharpBackend
+from deepstar_v14_3d.backends import (
+    AppleSharpBackend,
+    VisionAnalysis,
+    _read_pgm,
+    _write_spatial_portrait,
+)
 from deepstar_v14_3d.config import Settings
 from deepstar_v14_3d.errors import AppleResearchLicenseRequired, RightsConfirmationRequired, TrainingActive
 from deepstar_v14_3d.pipeline import create_scene
@@ -50,7 +54,7 @@ class PipelineTests(unittest.TestCase):
             settings = self.settings(root)
             with patch("deepstar_v14_3d.backends.shutil.which", return_value="/usr/bin/sips"), patch(
                 "deepstar_v14_3d.backends.subprocess.run"
-            ) as run:
+            ) as run, patch("deepstar_v14_3d.backends._run_vision_analysis", return_value=None):
                 def fake_sips(argv, **kwargs):
                     Path(argv[-1]).write_bytes(image.read_bytes())
                     return type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})()
@@ -58,8 +62,11 @@ class PipelineTests(unittest.TestCase):
                 job = create_scene(settings, image=image, backend="depth-card", confirm_rights=True)
             manifest = json.loads(job.manifest_path.read_text())
             self.assertEqual(manifest["status"], "complete")
-            self.assertEqual(manifest["backend"]["identifier"], "deepstar-depth-card-v1")
-            self.assertTrue((job.output_dir / "scene.ply").is_file())
+            self.assertEqual(manifest["backend"]["identifier"], "deepstar-vision-volume-v2")
+            scene = job.output_dir / "scene.ply"
+            self.assertTrue(scene.is_file())
+            self.assertIn("property uchar alpha", scene.read_text().split("end_header", 1)[0])
+            self.assertGreater(manifest["backend"]["details"]["geometry"]["total_points"], 0)
             self.assertTrue(str(job.root).startswith(str(settings.home)))
 
     def test_apple_backend_requires_explicit_research_acceptance(self) -> None:
@@ -69,6 +76,35 @@ class PipelineTests(unittest.TestCase):
                 AppleSharpBackend(self.settings(root)).run(
                     root / "image.png", root / "out", root / "log"
                 )
+
+    def test_vision_mask_creates_subject_volume_instead_of_background_card(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            mask_path = root / "mask.pgm"
+            mask_values = bytes(
+                [0, 255, 255, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 255, 255, 0]
+            )
+            mask_path.write_bytes(b"P5\n4 4\n255\n" + mask_values)
+            width, height, mask = _read_pgm(mask_path)
+            analysis = VisionAnalysis(
+                engine="test-vision",
+                mask_width=width,
+                mask_height=height,
+                mask=mask,
+                faces=[{"x": 0.25, "y": 0.25, "width": 0.5, "height": 0.5, "confidence": 1.0}],
+            )
+            scene = root / "scene.ply"
+            geometry = _write_spatial_portrait(
+                scene,
+                4,
+                4,
+                [(180, 120, 90)] * 16,
+                analysis,
+            )
+            self.assertLess(geometry["front_points"], 16)
+            self.assertGreater(geometry["total_points"], geometry["front_points"])
+            self.assertTrue(geometry["portrait_face_used"])
+            self.assertIn("property uchar alpha", scene.read_text())
 
     def test_apple_backend_respects_training_guard_before_launch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -87,4 +123,3 @@ class PipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

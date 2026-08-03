@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 APP_NAME = "Deepstar v14 3D"
-APP_BUILD = "14.3.0"
+APP_BUILD = "14.3.1"
 DEFAULT_PORT = 47143
 
 
@@ -54,4 +54,3 @@ class Settings:
         self.cache.mkdir(parents=True, exist_ok=True)
         (self.home / "jobs").mkdir(parents=True, exist_ok=True)
         (self.cache / "torch").mkdir(parents=True, exist_ok=True)
-

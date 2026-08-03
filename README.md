@@ -12,15 +12,16 @@ or application container.
 
 - Import a PNG, JPEG, HEIC, or other image macOS can decode.
 - Feed a prompt through a locally configured image-generation command.
-- Create an immediate, dependency-free depth-card point scene for workflow and
-  viewer testing.
+- Create an immediate Apple Vision spatial portrait: person masking, face-aware
+  volume, a back shell, and a silhouette rim with no downloaded model weights.
 - Use Apple's official SHARP CLI as a separately installed, opt-in research
   backend on CPU or Apple-silicon MPS.
 - Inspect the result in a local browser viewer, download the `.ply`, and retain
   a privacy-minimized provenance receipt.
 - Pause 3D inference when another Deepstar training process is detected.
 
-The depth-card backend is a geometric preview, not learned reconstruction.
+The built-in spatial portrait is deterministic geometry informed by Apple's
+on-device Vision framework, not learned monocular depth reconstruction.
 Apple SHARP produces the high-quality Gaussian representation, but Apple's
 released checkpoint is licensed only for non-commercial scientific research
 and academic development. The app therefore never downloads, bundles, or
@@ -62,7 +63,9 @@ export DEEPSTAR3D_IMAGE_COMMAND='my-imagegen --prompt {prompt} --output {output}
   --backend depth-card --confirm-rights
 ```
 
-Swap `depth-card` for `apple-sharp` after the separate research installation.
+The compatible CLI name remains `depth-card`; swap it for `apple-sharp` after
+the separate research installation when genuine learned scene reconstruction
+is required.
 
 ## Apple SHARP research backend
 
@@ -89,4 +92,3 @@ CUDA-only, so this app uses its own lightweight local geometry preview.
 
 See [ISOLATION.md](ISOLATION.md) and [docs/PIPELINE.md](docs/PIPELINE.md) for
 the hard boundaries and pipeline contract.
-

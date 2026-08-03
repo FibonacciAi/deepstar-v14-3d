@@ -59,7 +59,7 @@ def create_scene(
         )
         log = job.log_dir / f"{backend}.log"
         if backend == "depth-card":
-            result = DepthCardBackend().run(source, job.output_dir, log)
+            result = DepthCardBackend(settings).run(source, job.output_dir, log)
         elif backend == "apple-sharp":
             result = AppleSharpBackend(settings, device=device).run(
                 source,
@@ -77,6 +77,7 @@ def create_scene(
                     "identifier": result.identifier,
                     "research_only": result.research_only,
                     "commercial_use_approved": False if result.research_only else None,
+                    "details": result.metadata,
                 },
                 "scene": {
                     "filename": result.scene.name,
@@ -94,4 +95,3 @@ def create_scene(
             }
         )
         raise
-
