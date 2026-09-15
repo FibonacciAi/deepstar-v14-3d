@@ -4,6 +4,7 @@ import json
 import struct
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -91,11 +92,25 @@ class PipelineTests(unittest.TestCase):
             manifest = json.loads(job.manifest_path.read_text())
             self.assertEqual(manifest["status"], "complete")
             self.assertEqual(manifest["backend"]["identifier"], "deepstar-vision-volume-v2")
+            self.assertEqual(manifest["export"]["filename"], "scene-package.zip")
             scene = job.output_dir / "scene.ply"
             self.assertTrue(scene.is_file())
             self.assertIn("property uchar alpha", scene.read_text().split("end_header", 1)[0])
             self.assertGreater(manifest["backend"]["details"]["geometry"]["total_points"], 0)
             self.assertTrue(str(job.root).startswith(str(settings.home)))
+            package = job.output_dir / "scene-package.zip"
+            self.assertTrue(package.is_file())
+            with zipfile.ZipFile(package) as archive:
+                self.assertEqual(
+                    set(archive.namelist()),
+                    {"scene.ply", "manifest.json", "metadata.json", "README.txt"},
+                )
+                packaged_manifest = json.loads(archive.read("manifest.json"))
+                metadata = json.loads(archive.read("metadata.json"))
+                self.assertEqual(packaged_manifest["job_id"], job.identifier)
+                self.assertFalse(metadata["privacy"]["source_image_included"])
+                self.assertNotIn("source/", archive.namelist())
+                self.assertIn("Open it in MeshLab", archive.read("README.txt").decode())
 
     def test_reads_sips_alpha_bitfields_bitmap_from_transparent_png(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

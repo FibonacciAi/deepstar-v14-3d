@@ -87,7 +87,17 @@ def main(argv: list[str] | None = None) -> int:
                 allow_concurrent_training=arguments.allow_concurrent_training,
                 device=arguments.device,
             )
-            print(json.dumps({"job": job.identifier, "path": str(job.root)}, indent=2))
+            print(
+                json.dumps(
+                    {
+                        "job": job.identifier,
+                        "path": str(job.root),
+                        "scene": str(job.output_dir / "scene.ply"),
+                        "package": str(job.output_dir / "scene-package.zip"),
+                    },
+                    indent=2,
+                )
+            )
             return 0
         if arguments.command == "serve":
             from .server import serve

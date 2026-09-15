@@ -20,6 +20,10 @@ or application container.
   Gaussian `.ply` and write Apple Vision person-mask/face-analysis sidecars.
 - Inspect the result in a local browser viewer, download the `.ply`, and retain
   a privacy-minimized provenance receipt.
+- Export a portable `scene-package.zip` containing the scene, receipt, metadata,
+  and local-use instructions. The package intentionally excludes source pixels,
+  prompt text, and model weights; the viewer can also save its current orbit as
+  a PNG snapshot.
 - Pause 3D inference when another Deepstar training process is detected.
 
 The built-in spatial portrait is deterministic geometry informed by Apple's
@@ -102,3 +106,17 @@ CUDA-only, so this app uses its own lightweight local geometry preview.
 
 See [ISOLATION.md](ISOLATION.md) and [docs/PIPELINE.md](docs/PIPELINE.md) for
 the hard boundaries and pipeline contract.
+
+## Export and use a scene
+
+Every completed job creates `outputs/scene-package.zip`. In the browser, choose
+**Export scene package** to download it, or choose **Download .ply** when a raw
+scene is all you need. **Save snapshot** downloads the current local viewer
+canvas as `deepstar-scene-snapshot.png`; it is a presentation image, not a
+replacement for the 3D scene.
+
+Extract the package and open `scene.ply` in MeshLab, Blender with a PLY
+importer, or another PLY/3D Gaussian-compatible tool. Keep `manifest.json` next
+to the scene to preserve the source and scene fingerprints. Packages are
+assembled locally and do not upload anything. If the backend is Apple SHARP,
+the included README and receipt retain its research-only licensing warning.

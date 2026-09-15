@@ -41,6 +41,23 @@ shows sampled Gaussian centers as a responsive geometry preview; it is not a
 full anisotropic Gaussian renderer. The downloaded `.ply` remains compatible
 with dedicated 3DGS tooling.
 
+Each completed job also writes `outputs/scene-package.zip`. Its fixed, safe
+entries are:
+
+```text
+scene.ply      generated scene
+manifest.json  provenance receipt (hashes and backend/licensing state)
+metadata.json  source-independent export metadata and privacy flags
+README.txt     extraction, viewer, rights, and research-license instructions
+```
+
+The package never includes `source/`, prompt text, credentials, or model
+weights. The local server exposes it through `/api/jobs/{job_id}/export`; job
+identifiers and artifact paths are allow-listed/resolved beneath the job root,
+and missing or traversal-like paths return 404. The browser's snapshot action
+uses `HTMLCanvasElement.toBlob()` and therefore captures only the visible local
+orbit, with no server-side media write.
+
 ## v14 lessons retained
 
 - model implementations live behind a narrow rendering seam;

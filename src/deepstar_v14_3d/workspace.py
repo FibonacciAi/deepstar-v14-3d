@@ -5,6 +5,7 @@ import json
 import re
 import shutil
 import uuid
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +15,7 @@ from .config import APP_BUILD, Settings
 
 
 SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]+")
+EXPORT_SCHEMA_VERSION = 1
 
 
 def sha256_file(path: Path) -> str:
@@ -90,3 +92,94 @@ class Job:
     def manifest(self) -> dict[str, Any]:
         return json.loads(self.manifest_path.read_text())
 
+    def export_package(self) -> Path:
+        """Create a portable scene package without copying the source image.
+
+        The package deliberately contains only the generated scene, its
+        provenance receipt, and source-independent instructions/metadata. It
+        is written beside the scene and replaced atomically so a browser
+        download never observes a partial archive.
+        """
+        manifest = self.manifest()
+        scene = self.output_dir / "scene.ply"
+        if manifest.get("status") != "complete" or not scene.is_file():
+            raise ValueError("A completed scene is required before exporting.")
+
+        package = self.output_dir / "scene-package.zip"
+        temporary = self.output_dir / f".scene-package-{uuid.uuid4().hex}.zip"
+        metadata = {
+            "export_schema_version": EXPORT_SCHEMA_VERSION,
+            "job_id": self.identifier,
+            "app": manifest.get("app", "deepstar-v14-3d"),
+            "app_build": manifest.get("app_build"),
+            "scene": manifest.get("scene", {}),
+            "backend": manifest.get("backend", {}),
+            "privacy": {
+                "source_image_included": False,
+                "prompt_text_included": False,
+                "model_weights_included": False,
+                "local_only": True,
+            },
+        }
+        readme = _export_readme(manifest)
+        try:
+            with zipfile.ZipFile(
+                temporary,
+                mode="w",
+                compression=zipfile.ZIP_DEFLATED,
+                compresslevel=6,
+            ) as archive:
+                archive.write(scene, "scene.ply")
+                archive.writestr(
+                    "manifest.json",
+                    json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                )
+                archive.writestr(
+                    "metadata.json",
+                    json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+                )
+                archive.writestr("README.txt", readme)
+            temporary.replace(package)
+        finally:
+            temporary.unlink(missing_ok=True)
+        return package
+
+
+def _export_readme(manifest: dict[str, Any]) -> str:
+    backend = manifest.get("backend", {})
+    identifier = backend.get("identifier", "unknown")
+    research = bool(backend.get("research_only"))
+    rights = "confirmed in the Deepstar v14 3D job receipt"
+    license_note = (
+        "This scene was produced by the Apple SHARP research backend; review "
+        "THIRD_PARTY.md and Apple's research license before sharing or using it."
+        if research
+        else "This scene was produced by the local Apple Vision spatial portrait backend."
+    )
+    return f"""Deepstar v14 3D scene package
+===============================
+
+This archive contains a generated PLY scene and a provenance receipt. It does
+not contain the original source image, prompt text, credentials, or model
+weights. The workspace is local-only; sharing this archive is an explicit user
+action.
+
+Backend: {identifier}
+Rights: {rights}
+
+Files
+-----
+scene.ply     Generated scene. Open it in MeshLab, Blender (with a PLY importer),
+              or another PLY/3D Gaussian-compatible viewer.
+manifest.json Full job receipt, including source and scene fingerprints.
+metadata.json Export metadata and privacy boundaries without source pixels.
+README.txt    This usage and rights note.
+
+Use
+---
+1. Extract the archive to a folder you control.
+2. Open scene.ply in your preferred 3D tool.
+3. Keep manifest.json with the scene when moving it so provenance stays attached.
+
+{license_note}
+"""

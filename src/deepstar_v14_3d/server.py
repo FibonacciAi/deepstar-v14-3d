@@ -75,7 +75,15 @@ class StudioHandler(BaseHTTPRequestHandler):
             )
             return
         if path.startswith("/api/jobs/"):
-            identifier = path.removeprefix("/api/jobs/").strip("/")
+            route = unquote(path).removeprefix("/api/jobs/").strip("/")
+            if route.endswith("/export"):
+                identifier = route.removesuffix("/export").strip("/")
+                try:
+                    self._file(self._export_path(identifier), download=True)
+                except ValueError:
+                    self.send_error(HTTPStatus.NOT_FOUND)
+                return
+            identifier = route
             try:
                 manifest = self._job_root(identifier).joinpath("manifest.json")
                 self._json(json.loads(manifest.read_text()))
@@ -92,7 +100,7 @@ class StudioHandler(BaseHTTPRequestHandler):
                 requested = (root / parts[1]).resolve()
                 if root.resolve() not in requested.parents or not requested.is_file():
                     raise ValueError
-                self._file(requested, download=requested.suffix == ".ply")
+                self._file(requested, download=requested.suffix in {".ply", ".zip"})
             except ValueError:
                 self.send_error(HTTPStatus.NOT_FOUND)
             return
@@ -148,6 +156,7 @@ class StudioHandler(BaseHTTPRequestHandler):
                     "jobId": job.identifier,
                     "manifest": job.manifest(),
                     "sceneUrl": f"/artifacts/{job.identifier}/outputs/scene.ply",
+                    "packageUrl": f"/api/jobs/{job.identifier}/export",
                     "manifestUrl": f"/artifacts/{job.identifier}/manifest.json",
                 },
                 status=HTTPStatus.CREATED,
@@ -165,6 +174,13 @@ class StudioHandler(BaseHTTPRequestHandler):
         if not root.is_dir():
             raise ValueError
         return root
+
+    def _export_path(self, identifier: str) -> Path:
+        root = self._job_root(identifier)
+        package = (root / "outputs" / "scene-package.zip").resolve()
+        if root.resolve() not in package.parents or not package.is_file():
+            raise ValueError
+        return package
 
     def _json(self, payload: object, status: int = HTTPStatus.OK) -> None:
         body = json.dumps(payload).encode()

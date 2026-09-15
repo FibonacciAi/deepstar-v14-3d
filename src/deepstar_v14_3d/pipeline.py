@@ -91,8 +91,15 @@ def create_scene(
                     "sha256": sha256_file(result.scene),
                     "format": "ply",
                 },
+                "export": {
+                    "format": "zip",
+                    "filename": "scene-package.zip",
+                    "entries": ["scene.ply", "manifest.json", "metadata.json", "README.txt"],
+                    "schema_version": 1,
+                },
             }
         )
+        job.export_package()
         return job
     except Exception as error:
         job.write_manifest(
