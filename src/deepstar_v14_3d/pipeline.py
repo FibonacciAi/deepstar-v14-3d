@@ -43,6 +43,10 @@ def create_scene(
             prompt_hash = hashlib.sha256((prompt or "").encode()).hexdigest()
             generator = "external-command"
 
+        export_entries = ["scene.ply", "manifest.json", "metadata.json", "README.txt"]
+        for sidecar in ("subject-mask.pgm", "vision-analysis.json"):
+            if (job.output_dir / sidecar).is_file():
+                export_entries.append(f"guidance/{sidecar}")
         job.write_manifest(
             {
                 "status": "generating-3d",
@@ -94,7 +98,7 @@ def create_scene(
                 "export": {
                     "format": "zip",
                     "filename": "scene-package.zip",
-                    "entries": ["scene.ply", "manifest.json", "metadata.json", "README.txt"],
+                    "entries": export_entries,
                     "schema_version": 1,
                 },
             }

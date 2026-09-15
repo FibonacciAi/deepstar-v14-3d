@@ -120,3 +120,5 @@ importer, or another PLY/3D Gaussian-compatible tool. Keep `manifest.json` next
 to the scene to preserve the source and scene fingerprints. Packages are
 assembled locally and do not upload anything. If the backend is Apple SHARP,
 the included README and receipt retain its research-only licensing warning.
+Apple Vision mask/face sidecars, when available, travel under `guidance/` so a
+downstream tool can distinguish the subject without altering the original PLY.

@@ -49,10 +49,13 @@ scene.ply      generated scene
 manifest.json  provenance receipt (hashes and backend/licensing state)
 metadata.json  source-independent export metadata and privacy flags
 README.txt     extraction, viewer, rights, and research-license instructions
+guidance/      optional Apple Vision mask and face-analysis sidecars
 ```
 
 The package never includes `source/`, prompt text, credentials, or model
-weights. The local server exposes it through `/api/jobs/{job_id}/export`; job
+weights. When Apple Vision produced guidance, its derived mask and face-analysis
+JSON are included under `guidance/` and disclosed in `metadata.json`. The local
+server exposes the package through `/api/jobs/{job_id}/export`; job
 identifiers and artifact paths are allow-listed/resolved beneath the job root,
 and missing or traversal-like paths return 404. The browser's snapshot action
 uses `HTMLCanvasElement.toBlob()` and therefore captures only the visible local

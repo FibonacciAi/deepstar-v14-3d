@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 import zipfile
@@ -44,10 +45,18 @@ class ExportEndpointTests(unittest.TestCase):
                     "scene": {"filename": "scene.ply", "format": "ply"},
                 }
             )
+            (job.output_dir / "subject-mask.pgm").write_bytes(b"P5\n1 1\n255\n\xff")
+            (job.output_dir / "vision-analysis.json").write_text(
+                '{"engine":"test-vision","faces":[]}\n'
+            )
             package = job.export_package()
             self.assertEqual(package.name, "scene-package.zip")
             with zipfile.ZipFile(package) as archive:
                 self.assertIn("scene.ply", archive.namelist())
+                self.assertIn("guidance/subject-mask.pgm", archive.namelist())
+                self.assertIn("guidance/vision-analysis.json", archive.namelist())
+                metadata = json.loads(archive.read("metadata.json"))
+                self.assertTrue(metadata["privacy"]["derived_vision_guidance_included"])
 
             handler = StudioHandler.__new__(StudioHandler)
             handler.server = SimpleNamespace(settings=settings)

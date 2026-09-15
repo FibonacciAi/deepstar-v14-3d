@@ -118,9 +118,17 @@ class Job:
                 "source_image_included": False,
                 "prompt_text_included": False,
                 "model_weights_included": False,
+                "derived_vision_guidance_included": False,
                 "local_only": True,
             },
         }
+        guidance: list[tuple[Path, str]] = []
+        for filename in ("subject-mask.pgm", "vision-analysis.json"):
+            sidecar = self.output_dir / filename
+            if sidecar.is_file():
+                guidance.append((sidecar, f"guidance/{filename}"))
+        metadata["privacy"]["derived_vision_guidance_included"] = bool(guidance)
+        metadata["guidance_entries"] = [archive_name for _, archive_name in guidance]
         readme = _export_readme(manifest)
         try:
             with zipfile.ZipFile(
@@ -139,6 +147,8 @@ class Job:
                     json.dumps(metadata, indent=2, sort_keys=True) + "\n",
                 )
                 archive.writestr("README.txt", readme)
+                for sidecar, archive_name in guidance:
+                    archive.write(sidecar, archive_name)
             temporary.replace(package)
         finally:
             temporary.unlink(missing_ok=True)
@@ -174,6 +184,7 @@ scene.ply     Generated scene. Open it in MeshLab, Blender (with a PLY importer)
 manifest.json Full job receipt, including source and scene fingerprints.
 metadata.json Export metadata and privacy boundaries without source pixels.
 README.txt    This usage and rights note.
+guidance/     Optional Apple Vision subject mask and face-analysis metadata.
 
 Use
 ---

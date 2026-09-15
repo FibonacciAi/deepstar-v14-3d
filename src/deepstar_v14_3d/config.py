@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 APP_NAME = "Deepstar v14 3D"
-APP_BUILD = "14.3.2"
+APP_BUILD = "14.4.0"
 DEFAULT_PORT = 47143
 
 
