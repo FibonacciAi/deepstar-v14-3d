@@ -24,6 +24,11 @@ confirmation is required for both routes.
 - `apple-sharp`: calls the official SHARP predictor and returns its metric 3D
   Gaussian `.ply`. The adapter uses a dedicated Torch/cache root and defaults
   to MPS on Apple silicon. The Apple checkpoint is research-only.
+- `vision-sharp-hybrid`: runs the same gated SHARP predictor once on the
+  original job image, then asks Apple Vision for a local person mask and face
+  metadata. It records both as sidecars and in the receipt. SHARP remains the
+  geometry authority: the hybrid never combines point clouds or rewrites its
+  `.ply`, so there is no fabricated geometric correction or doubled surface.
 
 The backend interface is deliberately provider-neutral so a future
 Deepstar-owned, commercially cleared single-image-to-Gaussian model can replace

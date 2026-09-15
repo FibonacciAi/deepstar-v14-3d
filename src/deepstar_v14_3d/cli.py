@@ -24,7 +24,11 @@ def parser() -> argparse.ArgumentParser:
     source = create.add_mutually_exclusive_group(required=True)
     source.add_argument("--image", type=Path)
     source.add_argument("--prompt")
-    create.add_argument("--backend", choices=("depth-card", "apple-sharp"), default="depth-card")
+    create.add_argument(
+        "--backend",
+        choices=("depth-card", "apple-sharp", "vision-sharp-hybrid"),
+        default="depth-card",
+    )
     create.add_argument("--device", choices=("default", "cpu", "mps", "cuda"), default="default")
     create.add_argument("--confirm-rights", action="store_true")
     create.add_argument("--allow-concurrent-training", action="store_true")
@@ -48,6 +52,15 @@ def doctor(settings: Settings) -> int:
             "executable": str(settings.sharp_executable),
             "installed": settings.sharp_executable.is_file(),
             "research_license_accepted": settings.accept_apple_research_license,
+        },
+        "vision_sharp_hybrid": {
+            "identifier": "deepstar-vision-guided-apple-sharp-research",
+            "available": (
+                settings.sharp_executable.is_file()
+                and settings.accept_apple_research_license
+            ),
+            "requires": ["apple-vision", "apple-sharp", "research-license-acceptance"],
+            "ply_postprocessed": False,
         },
         "training_guard": {
             "active": bool(training),

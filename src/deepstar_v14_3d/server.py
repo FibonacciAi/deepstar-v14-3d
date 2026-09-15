@@ -19,6 +19,32 @@ MAX_REQUEST = 32 * 1024 * 1024
 WEB_ROOT = Path(__file__).with_name("web")
 
 
+def backend_status(settings: Settings) -> dict[str, dict[str, object]]:
+    """Return UI-safe readiness metadata without exposing executable paths."""
+    sharp_ready = (
+        settings.sharp_executable.is_file()
+        and settings.accept_apple_research_license
+    )
+    return {
+        "depth-card": {
+            "identifier": "deepstar-vision-volume-v2",
+            "available": True,
+            "researchOnly": False,
+        },
+        "apple-sharp": {
+            "identifier": "apple-ml-sharp-research",
+            "available": sharp_ready,
+            "researchOnly": True,
+        },
+        "vision-sharp-hybrid": {
+            "identifier": "deepstar-vision-guided-apple-sharp-research",
+            "available": sharp_ready,
+            "researchOnly": True,
+            "plyPostprocessed": False,
+        },
+    }
+
+
 class StudioServer(ThreadingHTTPServer):
     daemon_threads = True
 
@@ -41,6 +67,7 @@ class StudioHandler(BaseHTTPRequestHandler):
                 {
                     "appleSharpInstalled": self.server.settings.sharp_executable.is_file(),
                     "appleLicenseAccepted": self.server.settings.accept_apple_research_license,
+                    "backends": backend_status(self.server.settings),
                     "imageGeneratorConfigured": bool(self.server.settings.image_command),
                     "trainingActive": bool(training),
                     "trainingMatches": training,

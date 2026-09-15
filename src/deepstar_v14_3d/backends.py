@@ -135,6 +135,68 @@ class AppleSharpBackend:
         return BackendResult(scene, self.identifier, True)
 
 
+class AppleVisionSharpHybridBackend:
+    """Keep SHARP geometry intact while attaching local Apple Vision guidance.
+
+    SHARP owns the learned 3D Gaussian PLY.  Vision creates a job-local mask and
+    analysis sidecar after SHARP has completed; it never rewrites or merges into
+    the learned point cloud, which avoids duplicated or ghosted geometry.
+    """
+
+    identifier = "deepstar-vision-guided-apple-sharp-research"
+    contract = "vision-guided-sharp-v1"
+
+    def __init__(self, settings: Settings, device: str = "default") -> None:
+        self.settings = settings
+        self.device = device
+
+    def run(
+        self,
+        source: Path,
+        output_dir: Path,
+        log_path: Path,
+        allow_concurrent_training: bool = False,
+    ) -> BackendResult:
+        # Delegate the gate, training guard, command construction, and original
+        # image handling to the narrow SHARP adapter.  This is intentionally not
+        # a second SHARP invocation and does not alter its emitted PLY.
+        sharp_result = AppleSharpBackend(self.settings, device=self.device).run(
+            source,
+            output_dir,
+            log_path,
+            allow_concurrent_training=allow_concurrent_training,
+        )
+        analysis = _run_vision_analysis(self.settings, source, output_dir, log_path)
+        vision: dict[str, object]
+        if analysis is None:
+            vision = {
+                "available": False,
+                "reason": "Apple Vision guidance was unavailable; the SHARP scene is unchanged.",
+            }
+        else:
+            vision = {
+                "available": True,
+                "engine": analysis.engine,
+                "face_count": len(analysis.faces),
+                "subject_mask": "subject-mask.pgm",
+                "analysis": "vision-analysis.json",
+            }
+        return BackendResult(
+            sharp_result.scene,
+            self.identifier,
+            True,
+            {
+                "hybrid_contract": self.contract,
+                "sharp": {
+                    "identifier": sharp_result.identifier,
+                    "input": "original-job-source",
+                    "ply_postprocessed": False,
+                },
+                "vision": vision,
+            },
+        )
+
+
 class DepthCardBackend:
     identifier = "deepstar-vision-volume-v2"
 

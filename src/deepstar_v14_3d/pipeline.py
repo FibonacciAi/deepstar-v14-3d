@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from .backends import AppleSharpBackend, DepthCardBackend
+from .backends import AppleSharpBackend, AppleVisionSharpHybridBackend, DepthCardBackend
 from .config import Settings
 from .errors import RightsConfirmationRequired
 from .imagegen import generate_with_command
@@ -62,6 +62,13 @@ def create_scene(
             result = DepthCardBackend(settings).run(source, job.output_dir, log)
         elif backend == "apple-sharp":
             result = AppleSharpBackend(settings, device=device).run(
+                source,
+                job.output_dir,
+                log,
+                allow_concurrent_training=allow_concurrent_training,
+            )
+        elif backend == "vision-sharp-hybrid":
+            result = AppleVisionSharpHybridBackend(settings, device=device).run(
                 source,
                 job.output_dir,
                 log,

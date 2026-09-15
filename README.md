@@ -16,6 +16,8 @@ or application container.
   volume, a back shell, and a silhouette rim with no downloaded model weights.
 - Use Apple's official SHARP CLI as a separately installed, opt-in research
   backend on CPU or Apple-silicon MPS.
+- Use the opt-in Vision-guided SHARP research backend to retain SHARP's original
+  Gaussian `.ply` and write Apple Vision person-mask/face-analysis sidecars.
 - Inspect the result in a local browser viewer, download the `.ply`, and retain
   a privacy-minimized provenance receipt.
 - Pause 3D inference when another Deepstar training process is detected.
@@ -63,9 +65,10 @@ export DEEPSTAR3D_IMAGE_COMMAND='my-imagegen --prompt {prompt} --output {output}
   --backend depth-card --confirm-rights
 ```
 
-The compatible CLI name remains `depth-card`; swap it for `apple-sharp` after
-the separate research installation when genuine learned scene reconstruction
-is required.
+The compatible CLI name remains `depth-card`; after the separate research
+installation, use `apple-sharp` for a pure learned scene or
+`vision-sharp-hybrid` for the same SHARP scene plus local Vision sidecars. The
+hybrid never merges the two point clouds or edits SHARP's `.ply`.
 
 ## Apple SHARP research backend
 
@@ -78,6 +81,13 @@ export DEEPSTAR3D_ACCEPT_APPLE_RESEARCH_LICENSE=1
 ./scripts/deepstar3d create --image photo.jpg --backend apple-sharp \
   --confirm-rights
 ```
+
+For the hybrid, replace `apple-sharp` with `vision-sharp-hybrid`. It has the
+same installation, runtime-license, and training guard. SHARP receives the
+original job image; Apple Vision then writes `subject-mask.pgm` and
+`vision-analysis.json` beside the unmodified `scene.ply`. These sidecars are
+identified in the job receipt and are local-only artifacts, not model input or
+a claim of SHARP geometry correction.
 
 The installer pins the inspected Apple source revision. Runtime caches and the
 downloaded checkpoint stay inside Deepstar v14 3D's cache root. On macOS, the

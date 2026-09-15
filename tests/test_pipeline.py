@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 from deepstar_v14_3d.backends import (
     AppleSharpBackend,
+    AppleVisionSharpHybridBackend,
+    BackendResult,
     VisionAnalysis,
     _read_bmp,
     _read_pgm,
@@ -110,6 +112,48 @@ class PipelineTests(unittest.TestCase):
                 AppleSharpBackend(self.settings(root)).run(
                     root / "image.png", root / "out", root / "log"
                 )
+
+    def test_vision_sharp_hybrid_requires_the_same_research_acceptance(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with self.assertRaises(AppleResearchLicenseRequired):
+                AppleVisionSharpHybridBackend(self.settings(root)).run(
+                    root / "image.png", root / "out", root / "log"
+                )
+
+    def test_vision_sharp_hybrid_keeps_sharp_ply_unchanged_and_records_sidecar(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source.png"
+            source.write_bytes(b"original-image-bytes")
+            output = root / "out"
+            output.mkdir()
+            scene = output / "scene.ply"
+            original_ply = b"ply\nformat ascii 1.0\nend_header\n"
+            scene.write_bytes(original_ply)
+            analysis = VisionAnalysis(
+                engine="test-vision",
+                mask_width=2,
+                mask_height=2,
+                mask=b"\xff" * 4,
+                faces=[{"x": 0.25, "y": 0.25, "width": 0.5, "height": 0.5, "confidence": 1.0}],
+            )
+            with patch.object(
+                AppleSharpBackend,
+                "run",
+                return_value=BackendResult(scene, "apple-ml-sharp-research", True),
+            ) as sharp_run, patch(
+                "deepstar_v14_3d.backends._run_vision_analysis",
+                return_value=analysis,
+            ):
+                result = AppleVisionSharpHybridBackend(self.settings(root, accepted=True)).run(
+                    source, output, root / "hybrid.log"
+                )
+            self.assertEqual(sharp_run.call_args.args[0], source)
+            self.assertEqual(scene.read_bytes(), original_ply)
+            self.assertEqual(result.identifier, "deepstar-vision-guided-apple-sharp-research")
+            self.assertFalse(result.metadata["sharp"]["ply_postprocessed"])
+            self.assertEqual(result.metadata["vision"]["face_count"], 1)
 
     def test_vision_mask_creates_subject_volume_instead_of_background_card(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

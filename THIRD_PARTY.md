@@ -26,7 +26,9 @@ Consequences enforced here:
    commercially approved.
 5. Deepstar-owned 2D v14 weights are never fine-tuned from, distilled from, or
    combined into Apple SHARP weights.
+6. The `vision-sharp-hybrid` option retains the identical research gate. Apple
+   Vision sidecars are local presentation metadata; they do not modify, train,
+   or become derivatives of SHARP geometry.
 
 Review the authoritative current license before every redistribution or use:
 https://github.com/apple/ml-sharp/blob/main/LICENSE_MODEL
-
