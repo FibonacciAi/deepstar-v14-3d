@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import struct
 import tempfile
 import unittest
@@ -127,6 +128,55 @@ class PipelineTests(unittest.TestCase):
                 AppleSharpBackend(self.settings(root)).run(
                     root / "image.png", root / "out", root / "log"
                 )
+
+    def test_settings_reuse_existing_spectra_sharp_environment(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            sharp = root / ".spectra" / "miniconda" / "envs" / "sharp" / "bin" / "sharp"
+            sharp.parent.mkdir(parents=True)
+            sharp.write_text("#!/bin/sh\n")
+            with patch.object(Path, "home", return_value=root), patch.dict(
+                os.environ,
+                {
+                    "DEEPSTAR3D_HOME": str(root / "home"),
+                    "DEEPSTAR3D_CACHE": str(root / "cache"),
+                },
+                clear=True,
+            ):
+                settings = Settings.from_environment()
+            self.assertEqual(settings.sharp_executable, sharp)
+
+    def test_apple_backend_reuses_existing_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            sharp = root / "sharp"
+            sharp.write_text("#!/bin/sh\n")
+            checkpoint = root / "sharp_2572gikvuh.pt"
+            checkpoint.write_bytes(b"weights")
+            settings = Settings(
+                root / "home",
+                root / "cache",
+                sharp,
+                True,
+                None,
+                checkpoint,
+            )
+
+            def fake_run(argv, **kwargs):
+                output = Path(argv[argv.index("-o") + 1])
+                output.joinpath("image.ply").write_text("ply\n")
+                return type("Result", (), {"returncode": 0})()
+
+            with patch(
+                "deepstar_v14_3d.backends.active_training_processes", return_value=[]
+            ), patch("deepstar_v14_3d.backends.shutil.which", return_value=None), patch(
+                "deepstar_v14_3d.backends.subprocess.run", side_effect=fake_run
+            ) as run:
+                AppleSharpBackend(settings).run(
+                    root / "image.png", root / "out", root / "log"
+                )
+            argv = run.call_args.args[0]
+            self.assertEqual(argv[argv.index("-c") + 1], str(checkpoint))
 
     def test_vision_sharp_hybrid_requires_the_same_research_acceptance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

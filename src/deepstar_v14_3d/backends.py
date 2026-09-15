@@ -98,10 +98,14 @@ class AppleSharpBackend:
             str(source),
             "-o",
             str(output_dir),
+        ]
+        if self.settings.sharp_checkpoint and self.settings.sharp_checkpoint.is_file():
+            argv.extend(["-c", str(self.settings.sharp_checkpoint)])
+        argv.extend([
             "--device",
             self.device,
             "--no-render",
-        ]
+        ])
         nice = shutil.which("nice")
         if nice:
             argv = [nice, "-n", "10", *argv]

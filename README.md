@@ -98,6 +98,11 @@ downloaded checkpoint stay inside Deepstar v14 3D's cache root. On macOS, the
 adapter uses MPS for prediction when available; Apple's trajectory renderer is
 CUDA-only, so this app uses its own lightweight local geometry preview.
 
+Deepstar also reuses an existing `~/.spectra/miniconda/envs/sharp` installation
+when present, without copying or modifying it. It detects Apple's standard
+`~/.cache/torch/hub/checkpoints/sharp_2572gikvuh.pt` cache; set
+`DEEPSTAR3D_SHARP_CHECKPOINT` to point at the same checkpoint stored elsewhere.
+
 ## Verify
 
 ```sh

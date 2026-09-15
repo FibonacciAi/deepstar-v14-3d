@@ -66,6 +66,10 @@ class StudioHandler(BaseHTTPRequestHandler):
             self._json(
                 {
                     "appleSharpInstalled": self.server.settings.sharp_executable.is_file(),
+                    "appleSharpCheckpointPresent": bool(
+                        self.server.settings.sharp_checkpoint
+                        and self.server.settings.sharp_checkpoint.is_file()
+                    ),
                     "appleLicenseAccepted": self.server.settings.accept_apple_research_license,
                     "backends": backend_status(self.server.settings),
                     "imageGeneratorConfigured": bool(self.server.settings.image_command),

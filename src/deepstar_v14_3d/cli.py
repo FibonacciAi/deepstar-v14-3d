@@ -51,6 +51,12 @@ def doctor(settings: Settings) -> int:
         "apple_sharp": {
             "executable": str(settings.sharp_executable),
             "installed": settings.sharp_executable.is_file(),
+            "checkpoint": (
+                str(settings.sharp_checkpoint) if settings.sharp_checkpoint else None
+            ),
+            "checkpoint_present": bool(
+                settings.sharp_checkpoint and settings.sharp_checkpoint.is_file()
+            ),
             "research_license_accepted": settings.accept_apple_research_license,
         },
         "vision_sharp_hybrid": {
