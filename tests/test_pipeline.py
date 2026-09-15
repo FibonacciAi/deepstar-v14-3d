@@ -10,6 +10,7 @@ from unittest.mock import patch
 from deepstar_v14_3d.backends import (
     AppleSharpBackend,
     VisionAnalysis,
+    _read_bmp,
     _read_pgm,
     _write_spatial_portrait,
 )
@@ -32,6 +33,31 @@ def write_bmp(path: Path, width: int = 4, height: int = 3) -> None:
     header = b"BM" + struct.pack("<IHHI", size, 0, 0, offset)
     header += struct.pack("<IiiHHIIIIII", 40, width, height, 1, 24, 0, len(pixels), 2835, 2835, 0, 0)
     path.write_bytes(header + pixels)
+
+
+def write_alpha_bitfields_bmp(path: Path) -> None:
+    width, height = 2, 1
+    dib_size = 124
+    pixel_offset = 14 + dib_size
+    pixels = struct.pack("<II", 0xFF1E140A, 0x806496C8)
+    header = b"BM" + struct.pack("<IHHI", pixel_offset + len(pixels), 0, 0, pixel_offset)
+    dib = struct.pack(
+        "<IiiHHIIIIII",
+        dib_size,
+        width,
+        -height,
+        1,
+        32,
+        3,
+        len(pixels),
+        2835,
+        2835,
+        0,
+        0,
+    )
+    masks = struct.pack("<IIII", 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000)
+    dib += masks + b"\0" * (dib_size - len(dib) - len(masks))
+    path.write_bytes(header + dib + pixels)
 
 
 class PipelineTests(unittest.TestCase):
@@ -68,6 +94,14 @@ class PipelineTests(unittest.TestCase):
             self.assertIn("property uchar alpha", scene.read_text().split("end_header", 1)[0])
             self.assertGreater(manifest["backend"]["details"]["geometry"]["total_points"], 0)
             self.assertTrue(str(job.root).startswith(str(settings.home)))
+
+    def test_reads_sips_alpha_bitfields_bitmap_from_transparent_png(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            bitmap = Path(temporary) / "source.bmp"
+            write_alpha_bitfields_bmp(bitmap)
+            width, height, pixels = _read_bmp(bitmap)
+            self.assertEqual((width, height), (2, 1))
+            self.assertEqual(pixels, [(30, 20, 10), (100, 150, 200)])
 
     def test_apple_backend_requires_explicit_research_acceptance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

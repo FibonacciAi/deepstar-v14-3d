@@ -278,21 +278,47 @@ def _read_bmp(path: Path) -> tuple[int, int, list[tuple[int, int, int]]]:
     width, signed_height = struct.unpack_from("<ii", data, 18)
     planes, bits = struct.unpack_from("<HH", data, 26)
     compression = struct.unpack_from("<I", data, 30)[0]
-    if width <= 0 or signed_height == 0 or planes != 1 or bits not in (24, 32) or compression != 0:
-        raise BackendUnavailable("Depth-card supports uncompressed 24/32-bit bitmap input.")
+    supported_layout = (bits == 24 and compression == 0) or (
+        bits == 32 and compression in (0, 3)
+    )
+    if width <= 0 or signed_height == 0 or planes != 1 or not supported_layout:
+        raise BackendUnavailable("macOS produced an unsupported bitmap layout.")
     height = abs(signed_height)
     bottom_up = signed_height > 0
     bytes_per_pixel = bits // 8
     row_stride = ((width * bits + 31) // 32) * 4
+    channel_masks: tuple[int, int, int] | None = None
+    if bits == 32 and compression == 3:
+        mask_offset = 14 + 40 if dib_size >= 52 else 14 + dib_size
+        if mask_offset + 12 > len(data):
+            raise BackendUnavailable("macOS produced a truncated alpha bitmap.")
+        channel_masks = struct.unpack_from("<III", data, mask_offset)
+        if any(mask == 0 for mask in channel_masks):
+            raise BackendUnavailable("macOS produced an invalid alpha bitmap.")
     pixels: list[tuple[int, int, int]] = []
     for y in range(height):
         source_y = height - 1 - y if bottom_up else y
         row = pixel_offset + source_y * row_stride
+        if row < 0 or row + width * bytes_per_pixel > len(data):
+            raise BackendUnavailable("macOS produced a truncated bitmap.")
         for x in range(width):
             index = row + x * bytes_per_pixel
-            blue, green, red = data[index : index + 3]
+            if channel_masks:
+                packed = struct.unpack_from("<I", data, index)[0]
+                red, green, blue = (
+                    _scaled_mask_channel(packed, mask) for mask in channel_masks
+                )
+            else:
+                blue, green, red = data[index : index + 3]
             pixels.append((red, green, blue))
     return width, height, pixels
+
+
+def _scaled_mask_channel(pixel: int, mask: int) -> int:
+    least_bit = mask & -mask
+    shift = least_bit.bit_length() - 1
+    maximum = mask >> shift
+    return round(((pixel & mask) >> shift) * 255 / maximum)
 
 
 def _read_pgm(path: Path) -> tuple[int, int, bytes]:

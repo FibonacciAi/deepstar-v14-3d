@@ -155,6 +155,7 @@ class StudioHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", mimetypes.guess_type(path.name)[0] or "application/octet-stream")
         self.send_header("Content-Length", str(size))
         self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Cache-Control", "no-store")
         if download:
             self.send_header("Content-Disposition", f'attachment; filename="{path.name}"')
         self.end_headers()
@@ -182,4 +183,3 @@ def serve(settings: Settings, port: int, open_browser: bool) -> None:
         pass
     finally:
         server.server_close()
-
