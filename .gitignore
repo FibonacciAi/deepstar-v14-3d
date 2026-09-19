@@ -2,10 +2,11 @@
 .venv/
 .venv-sharp/
 vendor/
+!src/deepstar_v14_3d/web/vendor/
+!src/deepstar_v14_3d/web/vendor/*
 cache/
 workspace/
 dist/
 build/
 *.pyc
 __pycache__/
-

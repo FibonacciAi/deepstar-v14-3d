@@ -8,7 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from deepstar_v14_3d.config import Settings
-from deepstar_v14_3d.server import StudioHandler, backend_status
+from deepstar_v14_3d.server import WEB_ROOT, StudioHandler, backend_status
 from deepstar_v14_3d.workspace import Job
 
 
@@ -23,6 +23,20 @@ class StatusTests(unittest.TestCase):
             self.assertFalse(hybrid["available"])
             self.assertTrue(hybrid["researchOnly"])
             self.assertFalse(hybrid["plyPostprocessed"])
+
+
+class WebBundleTests(unittest.TestCase):
+    def test_sharp_preview_uses_vendored_gaussian_renderer(self) -> None:
+        index = (WEB_ROOT / "index.html").read_text()
+        app = (WEB_ROOT / "app.js").read_text()
+        engine = WEB_ROOT / "vendor" / "playcanvas-2.22.2.min.js"
+        license_file = WEB_ROOT / "vendor" / "PLAYCANVAS-LICENSE.txt"
+        self.assertIn('/vendor/playcanvas-2.22.2.min.js', index)
+        self.assertIn("new GaussianSplatViewer", app)
+        self.assertIn("data.numSplats", app)
+        self.assertGreater(engine.stat().st_size, 1_000_000)
+        self.assertIn("PlayCanvas Ltd.", license_file.read_text())
+        self.assertIn("Permission is hereby granted", license_file.read_text())
 
 
 class ExportEndpointTests(unittest.TestCase):

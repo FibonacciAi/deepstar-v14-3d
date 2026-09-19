@@ -32,3 +32,12 @@ Consequences enforced here:
 
 Review the authoritative current license before every redistribution or use:
 https://github.com/apple/ml-sharp/blob/main/LICENSE_MODEL
+
+## PlayCanvas Engine
+
+The local browser preview vendors PlayCanvas Engine 2.22.2 to render SHARP's
+anisotropic Gaussian PLY data with covariance, opacity, and camera-aware depth
+sorting. PlayCanvas Engine is licensed under the MIT License. The vendored
+license is at `src/deepstar_v14_3d/web/vendor/PLAYCANVAS-LICENSE.txt`.
+
+Source and releases: https://github.com/playcanvas/engine
