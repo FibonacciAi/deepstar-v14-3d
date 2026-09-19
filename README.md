@@ -1,5 +1,7 @@
 # Deepstar v14 3D
 
+**Public research demo:** https://fibonacciai.github.io/deepstar-v14-3d/
+
 Deepstar v14 3D is a separate, local-first 2D-to-3D studio. It turns either an
 explicitly selected image or the output of a user-configured image generator
 into a portable `.ply` scene and a provenance receipt.
@@ -18,7 +20,7 @@ or application container.
   backend on CPU or Apple-silicon MPS.
 - Use the opt-in Vision-guided SHARP research backend to retain SHARP's original
   Gaussian `.ply` and write Apple Vision person-mask/face-analysis sidecars.
-- Inspect the result in a local browser viewer, download the `.ply`, and retain
+- Inspect the result in a full Gaussian-splat browser viewer, download the `.ply`, and retain
   a privacy-minimized provenance receipt.
 - Export a portable `scene-package.zip` containing the scene, receipt, metadata,
   and local-use instructions. The package intentionally excludes source pixels,
@@ -96,7 +98,8 @@ a claim of SHARP geometry correction.
 The installer pins the inspected Apple source revision. Runtime caches and the
 downloaded checkpoint stay inside Deepstar v14 3D's cache root. On macOS, the
 adapter uses MPS for prediction when available; Apple's trajectory renderer is
-CUDA-only, so this app uses its own lightweight local geometry preview.
+CUDA-only on the released path, so this app uses the vendored open-source
+PlayCanvas Gaussian renderer for a local, camera-aware interactive preview.
 
 Deepstar also reuses an existing `~/.spectra/miniconda/envs/sharp` installation
 when present, without copying or modifying it. It detects Apple's standard

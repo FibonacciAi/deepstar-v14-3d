@@ -4,6 +4,8 @@
 vendor/
 !src/deepstar_v14_3d/web/vendor/
 !src/deepstar_v14_3d/web/vendor/*
+!docs/vendor/
+!docs/vendor/*
 cache/
 workspace/
 dist/

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080a0e">
+  <meta name="description" content="A public, permissioned Apple SHARP research result rendered with Deepstar v14 3D.">
+  <title>Deepstar v14 3D · Dimitri SHARP Study</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="https://github.com/FibonacciAi/deepstar-v14-3d" aria-label="Deepstar v14 3D on GitHub">
+      <span class="mark">✦</span>
+      <span><b>Deepstar v14 3D</b><small>Single image → nearby views</small></span>
+    </a>
+    <span class="research">Apple SHARP · research-only demo</span>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p class="eyebrow">Permissioned public study · Build 14.5.0</p>
+      <h1>One portrait.<br><em>1,179,648</em> Gaussians.</h1>
+      <p class="lede">Deepstar turns Dimitri’s single 2D self-portrait into a metric 3D Gaussian scene using Apple SHARP. Drag the result for nearby views, scroll to zoom, or reset to the source camera.</p>
+      <div class="facts">
+        <div><b>Input</b><span>One RGB image</span></div>
+        <div><b>Output</b><span>63 MB Gaussian PLY</span></div>
+        <div><b>Runtime</b><span>Local Apple silicon</span></div>
+      </div>
+      <figure class="source-card">
+        <img src="./assets/dimitri.png" alt="Dimitri’s permissioned self-portrait used for this research demo">
+        <figcaption><span>Source frame</span><span>Published by the subject</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="viewer-card" aria-label="Interactive Gaussian scene">
+      <div class="viewer-bar">
+        <div><i></i><span>Live Gaussian scene</span></div>
+        <div class="actions"><button id="reset" type="button">Reset view</button><button id="fullscreen" type="button">Fullscreen</button></div>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="scene" aria-label="Interactive 3D reconstruction of Dimitri"></canvas>
+        <div class="loading" id="loading"><span></span><b>Loading 1,179,648 splats</b><small>63 MB · rendered locally in your browser</small></div>
+      </div>
+      <div class="viewer-foot"><span id="status">Preparing renderer…</span><span>Drag · scroll · double-click reset</span></div>
+    </section>
+  </main>
+
+  <section class="notes">
+    <div><span>01</span><h2>Actual 3DGS</h2><p>The viewer uses Gaussian covariance, rotation, opacity, color, and camera-aware depth sorting—not a point-cloud approximation.</p></div>
+    <div><span>02</span><h2>Nearby views</h2><p>SHARP reconstructs a metric scene from one photograph. Motion is intentionally bounded to the useful single-image viewing envelope.</p></div>
+    <div><span>03</span><h2>Reproducible boundary</h2><p>The public repository contains the app and this permissioned result. Apple’s checkpoint and all unrelated local data are excluded.</p></div>
+  </section>
+
+  <footer>
+    <p>This is a non-commercial research demonstration. Apple SHARP model weights are not distributed. Apple does not sponsor or endorse this project.</p>
+    <a href="https://github.com/FibonacciAi/deepstar-v14-3d">Source on GitHub ↗</a>
+  </footer>
+
+  <script src="./vendor/playcanvas-2.22.2.min.js"></script>
+  <script src="./demo.js"></script>
+</body>
+</html>
