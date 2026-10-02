@@ -5,16 +5,12 @@ training work.
 
 ## Protected, read-only origins
 
-- `/Users/ContextGraph/Developer/Labs/deepstar`
-- `/Users/ContextGraph/Developer/Labs/deepstar-models`
-- `/Users/ContextGraph/Developer/Labs/RelayFaceStudio`
-- `/Applications/Deepstar.app`
-- `/Users/ContextGraph/Applications/Deepstar.app`
-- `~/Library/Application Support/Deepstar`
-- `~/Library/Application Support/Deepstar Training Intake`
+- Existing application source checkouts and model-training workspaces.
+- Installed application bundles.
+- Existing application support and training-intake storage.
 
 The new code contains no writer, migration, symlink, model loader, or cleanup
-routine targeting those paths. It does not import Deepstar v14 model artifacts.
+routine targeting those locations. It does not import Deepstar v14 model artifacts.
 General engineering lessons are reimplemented behind new interfaces.
 
 ## Unique runtime identity
